@@ -4,26 +4,62 @@ import { useEffect, useState } from "react";
 const AuthorEdit = () => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [isPublished, setIsPublished] = useState(false)
-  const [pending, setPending] = useState(false)
+  const [published, setPublished] = useState(null);
+  const [pending, setPending] = useState(false);
 
-  // useEffect = () => {
-  //     /* GET api data and use it to load articles */
-  // }
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/articles/1", {
+          method: "GET",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}`);
+        }
+        const json = await response.json();
+        console.log(json);
+        setTitle(json.article[0].title);
+        setBody(json.article[0].content);
+        setPublished(json.article[0].published);
+      } catch (e) {
+        console.log(e);
+      }
+    };
 
-  const handleSubmit = (e) => {
+    fetchData();
+  }, []);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    const article = { title, body, isPublished };
-
-    fetch("API endpoint here", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(article),
-    }).then(() => {
-      console.log("Article uploaded");
-    });
-  };
-
+    const token = localStorage.getItem("jwt");
+    console.log(token);
+    const content = { title, body, published };
+    try {
+      console.log("try");
+      const response = await fetch("http://localhost:3000/api/articles/1", {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(content),
+      });
+      console.log(content);
+      if (!response.ok) {
+        console.log("not ok");
+        throw new Error(`Error ${response.status}`);
+      } else {
+        const json = await response.json();
+        console.log(json);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   return (
     <div className="container">
@@ -38,11 +74,20 @@ const AuthorEdit = () => {
         <label>Body:</label>
         <textarea value={body} onChange={(e) => setBody(e.target.value)} />
 
-        {!pending && !isPublished && <button onClick={ ()=>setIsPublished(true) }>Publish</button>}
+        <label>Publish Article</label>
+        <input
+          type="checkbox"
+          defaultChecked={published}
+          onChange={(e) => setPublished(e.target.checked)}
+        />
+
+        <button>Submit</button>
+
+        {/* {!pending && !isPublished && <button type="submit" onClick={ ()=>setIsPublished(true) }>Publish</button>}
         {pending && !isPublished && <button disabled>Publishing</button>}
 
-        {!pending && isPublished && <button onClick={ ()=>setIsPublished(false) }>Unpublish</button>}
-        {pending && isPublished && <button disabled>Unpublishing</button>}
+        {!pending && isPublished && <button type="submit" onClick={ ()=>setIsPublished(false) }>Unpublish</button>}
+        {pending && isPublished && <button disabled>Unpublishing</button>} */}
       </form>
     </div>
   );

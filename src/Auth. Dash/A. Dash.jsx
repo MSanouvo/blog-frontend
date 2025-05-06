@@ -1,4 +1,4 @@
-import Preview from "../Components/ArticlePreview";
+import Preview from "../Components/ArticlePreview/ArticlePreview";
 import NavBar from "../NavBar/NavBar";
 import { useEffect, useState } from "react";
 
@@ -35,12 +35,14 @@ const AuthorDashboard = () => {
 
       {data.map((article) => {
         return (
-          <Preview
-            key={article.id}
-            title={article.title}
-            body={article.content}
-            date={article.date_created}
-          />
+          <div key={article.id}>
+            <Preview
+              title={article.title}
+              body={article.content}
+              date={article.date_created}
+            />
+            <button>delete</button>
+          </div>
         );
       })}
     </div>

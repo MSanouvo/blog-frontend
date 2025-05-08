@@ -5,7 +5,7 @@ const AuthorEdit = () => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [published, setPublished] = useState(null);
-  const [pending, setPending] = useState(false);
+  // const [pending, setPending] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {

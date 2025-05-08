@@ -1,5 +1,11 @@
 import './NavBar.css'
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
+
+NavBar.propTypes = {
+  header: PropTypes.string,
+  button: PropTypes. bool
+}
 
 const NavBar = ({ header, button }) => {
   const [user, setUser] = useState("")
@@ -20,7 +26,7 @@ const NavBar = ({ header, button }) => {
           throw new Error(`Error ${response.status}`);
         }
         const json = await response.json();
-        console.log(json);
+        // console.log(json);
         setUser(json.user)
       } catch (e) {
         console.log(e);

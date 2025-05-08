@@ -6,10 +6,44 @@ const ArticleView = () => {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [date, setDate] = useState("");
-  const [aritcleId, setArticleId] = useState("")
+  const [articleId, setArticleId] = useState("");
   const [allComments, setAllComments] = useState([]);
-  const [liked, setLiked] = useState(false)
+  const [liked, setLiked] = useState(false);
   const [comment, setComment] = useState("");
+
+  //For Editting
+  const [editBody, setEditBody] = useState("");
+
+  const token = localStorage.getItem("jwt");
+
+  //Refactor components so user info gets passed down here
+  const [user, setUser] = useState("");
+  const [isEditting, setIsEditting] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/api/user", {
+          method: "POST",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}`);
+        }
+        const json = await response.json();
+        // console.log(json);
+        setUser(json.user);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   //NEED TO GET ID FOR ARTICLE LATER
 
@@ -31,7 +65,7 @@ const ArticleView = () => {
         setTitle(json.article[0].title);
         setBody(json.article[0].content);
         setDate(json.article[0].date_created);
-        setArticleId(json.article[0].id)
+        setArticleId(json.article[0].id);
         setAllComments(json.comments);
         console.log(allComments);
       } catch (e) {
@@ -44,13 +78,11 @@ const ArticleView = () => {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const token = localStorage.getItem("jwt");
-    console.log(token);
     const content = { comment };
     try {
       console.log("try");
       const response = await fetch(
-        "http://localhost:3000/api/articles/1/comment",
+        `http://localhost:3000/api/articles/${articleId}/comment`,
         {
           method: "POST",
           headers: {
@@ -74,7 +106,6 @@ const ArticleView = () => {
   }
 
   async function likeArticle() {
-    const token = localStorage.getItem("jwt");
     try {
       console.log("try");
       console.log(liked);
@@ -119,6 +150,65 @@ const ArticleView = () => {
     }
   }
 
+  async function deleteComment(id) {
+    alert(`delete article ${id}`);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/articles/1/comment/${id}`,
+        {
+          method: "DELETE",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`);
+      }
+      console.log("comment deleted");
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function editComment(id, comment) {
+    setIsEditting(true);
+    setEditBody(comment);
+    console.log(`editting ${id}`);
+  }
+
+  async function submitEdit(e) {
+    console.log("edit Submitted");
+    setIsEditting(false);
+    e.preventDefault();
+    const edit = { comment: editBody };
+    try {
+      console.log("try");
+      const response = await fetch(
+        "http://localhost:3000/api/articles/1/comment/2",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(edit),
+        },
+      );
+      console.log(edit);
+      if (!response.ok) {
+        console.log("not ok");
+        throw new Error(`Error ${response.status}`);
+      } else {
+        const json = await response.json();
+        console.log(json);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   return (
     <div className="container">
@@ -135,14 +225,47 @@ const ArticleView = () => {
       {allComments.length != 0 &&
         allComments.map((comment) => {
           return (
-              <Comment
-                key={comment.id}
-                id={comment.id}
-              //Look into getting a username from prisma
-                user={comment.user}
-                body={comment.comment}
-                date={comment.date_created}
-              />
+            <div key={comment.id}>
+              {!isEditting && (
+                <Comment
+                  id={comment.id}
+                  //Look into getting a username from prisma
+                  user={comment.user}
+                  body={comment.comment}
+                  date={comment.date_created}
+                />
+              )}
+
+              {/* Proof of concept */}
+              {isEditting && (
+                <form onSubmit={submitEdit}>
+                  <textarea
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                  />
+                  <button>Edit</button>
+                </form>
+              )}
+
+              {user.id === comment.commenterId && (
+                <div>
+                  <button
+                    onClick={() => {
+                      deleteComment(comment.id);
+                    }}
+                  >
+                    Delete Comment
+                  </button>
+                  <button
+                    onClick={() => {
+                      editComment(comment.id, comment.comment);
+                    }}
+                  >
+                    Edit Comment
+                  </button>
+                </div>
+              )}
+            </div>
           );
         })}
 
